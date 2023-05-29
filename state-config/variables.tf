@@ -5,5 +5,5 @@ variable "region" {
 
 variable "state_bucket_name" {
     type = string
-    default = "bucket-optimizer-ez-tf-backend"
+    default = "bucket-optimizer-tf-backend"
 }
