@@ -4,8 +4,8 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket = "bucket-optimizer-tf-backend"
-    key    = "terraform.tfstate"
-    region = "us-east-1"
+    bucket = "bucket-optimizer-ez-tf-backend"
+    key    = "dev/terraform.tfstate"
+    region = "eu-central-1"
   }
 }

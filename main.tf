@@ -1,6 +1,6 @@
 module "optimize" {
   source               = "./modules/optimize"
-  destination_bucket   = var.destination_bucket
+  # destination_bucket   = var.destination_bucket
   source_bucket        = var.source_bucket
   source_bucket_arn    = data.aws_s3_bucket.source_bucket.arn
   aws_account_id       = var.aws_account_id
