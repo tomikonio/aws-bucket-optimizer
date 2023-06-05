@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "allow_logging_from_another_bucket" {
       variable = "aws:SourceAccount"
 
       values = [
-        var.aws_account_id
+        "${var.aws_account_id}"
       ]
     }
 
@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "allow_logging_from_another_bucket" {
     ]
 
     resources = [
-      "arn:aws:s3:::${aws_s3_bucket.log_bucket.name}/*"
+      "arn:aws:s3:::${var.log_bucket_name}/*"
     ]
   }
 }

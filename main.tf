@@ -31,4 +31,5 @@ module "origin_resources" {
   log_bucket_acl = var.log_bucket_acl
   key = var.key
   value = var.value
+  aws_account_id = var.aws_account_id
 }
