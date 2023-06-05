@@ -49,7 +49,7 @@ def lambda_handler(event, context):
     database = os.environ.get('DATABASE_NAME')
     table = os.environ.get('TABLE_NAME')
     query = f'''SELECT DISTINCT(key)
-FROM {table}
+FROM "{table}"
 parse_datetime(RequestDateTime,'dd/MMM/yyyy:HH:mm:ss Z')
 BETWEEN parse_datetime('{last_possible_datetime}','yyyy-MM-dd:HH:mm:ss')
 AND
