@@ -12,6 +12,9 @@ resource "aws_glue_catalog_table" "s3_access_logs22" {
     "comment"               = "Logs from S3 Server"
     
   }
+  depends_on = [
+    aws_glue_catalog_database.athena
+   ]
 
   table_type = "EXTERNAL_TABLE"
   storage_descriptor {
