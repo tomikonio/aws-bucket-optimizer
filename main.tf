@@ -3,6 +3,7 @@ module "optimize" {
   # destination_bucket   = var.destination_bucket
   source_bucket        = var.source_bucket
   source_bucket_arn    = data.aws_s3_bucket.source_bucket.arn
+  source_bucket_id     = data.aws_s3_bucket.source_bucket.id
   aws_account_id       = var.aws_account_id
   modify_days      = var.modify_days
   access_days      = var.access_days
@@ -19,6 +20,8 @@ module "optimize" {
   athena_queries_destination = var.athena_queries_destination
   key = var.key
   value = var.value
+
+  change_class_function_name = var.change_class_function_name
 
 }
 

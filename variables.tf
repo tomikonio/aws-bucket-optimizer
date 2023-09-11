@@ -101,3 +101,10 @@ variable "value" {
     type        = string
     default     = "demo"
 }
+
+
+variable "change_class_function_name" {
+    description = "Name of the lambda function"
+    type        = string
+    default     = "change_s3_class"
+}
