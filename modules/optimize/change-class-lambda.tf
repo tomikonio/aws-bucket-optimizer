@@ -2,12 +2,13 @@ module "lambda_function2" {
   source = "terraform-aws-modules/lambda/aws"
 
   function_name = var.change_class_function_name
+  description   = "Develeap bucket optimizer for under 128KB object size lambda"
   handler       = "change_class_lambda.lambda_handler"
   runtime       = "python3.10"
   source_path   = "./scripts/change_class_lambda.py"
   timeout       = 180
   environment_variables = {
-    KEY = var.key
+    KEY   = var.key
     VALUE = var.value
   }
 
@@ -28,7 +29,7 @@ module "lambda_function2" {
         var.source_bucket_arn,
         "${var.source_bucket_arn}/*"
       ]
-      effect    = "Allow"
+      effect = "Allow"
     }
   }
 }
