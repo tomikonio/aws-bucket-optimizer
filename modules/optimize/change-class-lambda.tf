@@ -6,6 +6,10 @@ module "lambda_function2" {
   runtime       = "python3.10"
   source_path   = "./scripts/change_class_lambda.py"
   timeout       = 180
+  environment_variables = {
+    KEY = var.key
+    VALUE = var.value
+  }
 
   create_package = true
 
@@ -17,7 +21,8 @@ module "lambda_function2" {
         "s3:GetObject",
         "s3:PutObject",
         "s3:ListBucket",
-        "s3:PutObjectTagging"
+        "s3:PutObjectTagging",
+        "s3:GetObjectTagging"
       ]
       resources = [
         var.source_bucket_arn,

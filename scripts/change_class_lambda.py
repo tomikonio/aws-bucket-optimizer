@@ -19,17 +19,21 @@ def lambda_handler(event, context):
     # Get the bucket name and the key from the event source
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
-    size = event['Records'][0]['s3']['object']['size']
 
+    response = s3.head_object(Bucket=bucket, Key=key)
+    object_size = response['ContentLength']
+
+    desired_tag_key = os.environ.get('KEY')
+    desired_tag_value = os.environ.get('VALUE')
     # Check if the object has the desired tag
-    if not object_has_tag(bucket, key, 'isOld', 'true'):
+    if not object_has_tag(bucket, key, desired_tag_key, desired_tag_value):
         return {
             'statusCode': 200,
             'body': f'Object {key} in bucket {bucket} does not have the tag isold:true. No action taken.'
         }
 
     # Only apply the storage class change if the object is less than 128kb
-    if size >= 128 * 1024:
+    if object_size >= 128 * 1024:
         return {
             'statusCode': 200,
             'body': f'Object {key} in bucket {bucket} is greater than or equal to 128kb. No action taken.'
