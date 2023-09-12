@@ -7,6 +7,7 @@ module "lambda_function2" {
   runtime       = "python3.10"
   source_path   = "./scripts/change_class_lambda.py"
   timeout       = 180
+  cloudwatch_logs_retention_in_days = 30
   environment_variables = {
     KEY   = var.key
     VALUE = var.value
