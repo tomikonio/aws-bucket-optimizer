@@ -90,4 +90,12 @@ variable "value" {
 }
 
 
+variable "change_class_function_name" {
+    description = "Name of the lambda function"
+    type        = string
+}
 
+variable "source_bucket_id" {
+    description = "ID of the Amazon S3 Source Bucket"
+    type        = string
+}
