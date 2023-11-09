@@ -27,7 +27,7 @@ key = os.environ.get('KEY')
 value = os.environ.get('VALUE')
 athena = boto3.client('athena')
 s3 = boto3.client('s3')
-current_time_seconds = datetime.now(timezone.utc).timestamp()
+current_time_seconds = datetime.now().timestamp()
 
 def lambda_handler(event, context):
     
@@ -35,8 +35,45 @@ def lambda_handler(event, context):
 
     # Get the list of objects in the source bucket
     response = s3.list_objects(Bucket=os.environ.get('BUCKET_NAME'))
+    print(f'{response=}')
     # Compute how many days passed off from the last modification and if objects don't meet requirements, then add them to the list
-    not_modified = [obj['Key'] for obj in response['Contents'] if (current_time_seconds - obj['LastModified'].timestamp()) / 86400 >= float(os.environ.get('MODIFY_DAYS'))]
+   
+    # not_modified = [obj['Key'] for obj in response['Contents'] if (current_time_seconds - obj['LastModified'].timestamp()) / 86400 >= float(os.environ.get('MODIFY_DAYS'))]
+    
+    
+    not_modified = []
+    # for obj in response['Contents']:
+    #     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    #     if (current_time_seconds - obj['LastModified'].timestamp()) / 86400 >= float(os.environ.get('MODIFY_DAYS')):
+    #         print(f'{current_time} - {obj["Key"]=} --- appended')
+    #         not_modified.append(obj['Key'])
+    #     else: 
+    #         print(f'{current_time} - {obj["Key"]=} --- not appended')
+
+
+
+    for obj in response.get('Contents', []):
+        tagging_response = s3.get_object_tagging(Bucket=os.environ.get('BUCKET_NAME'), Key=obj['Key'])
+        tags = {tag['Key']: tag['Value'] for tag in tagging_response.get('TagSet', [])}
+           
+        # Check if the object is already tagged with the specified key-value pair
+        if key in tags and tags[key] == value:
+            print(f"{obj['Key']} is already tagged with {key}={value}. Skipping.")
+            continue
+        last_modified_time = obj['LastModified'].timestamp()
+        time_difference = (current_time_seconds - last_modified_time) / 86400
+
+        # Print the current time, last modified time, and time difference
+        print(f"{current_time_seconds=}")
+        print(f"{last_modified_time=}")
+        print(f"Time difference in days: {time_difference * 1440}")
+
+        if  time_difference >= float(os.environ.get('MODIFY_DAYS')):
+            print(f"{obj['Key']} has not been modified in the last {os.environ.get('MODIFY_DAYS')} days. Appending for tagging.")
+            not_modified.append(obj['Key'])
+        else:
+            print(f"{obj['Key']} was modified recently. Not appending.")
+
 
     #########################################
 
@@ -53,7 +90,9 @@ FROM "{table}"
 WHERE parse_datetime(RequestDateTime,'dd/MMM/yyyy:HH:mm:ss Z')
 BETWEEN parse_datetime('{last_possible_datetime}','yyyy-MM-dd:HH:mm:ss')
 AND
-parse_datetime('{current_datetime}','yyyy-MM-dd:HH:mm:ss')'''                                                                                                                                                                      
+parse_datetime('{current_datetime}','yyyy-MM-dd:HH:mm:ss')'''
+    print(f'{query=}')
+                                                                                                                                                                      
     output   = f's3://{log_bucket_name}'
     path     = output_queries
 
@@ -66,7 +105,7 @@ parse_datetime('{current_datetime}','yyyy-MM-dd:HH:mm:ss')'''
              'OutputLocation': "{}/{}".format(output, path),
          }
      )
-
+    
     #Check the status of our query
     def check_status(get_data):                                                                                                                                                                                                                                                                             
         status = get_data['QueryExecution']['Status']['State']                                                                                                                                                                                                                                             
@@ -98,16 +137,35 @@ parse_datetime('{current_datetime}','yyyy-MM-dd:HH:mm:ss')'''
             continue
 
     #sys.exit(print(not_modified))
+    # for name in not_modified:
+    #     s3.put_object_tagging(
+    #                     Bucket=os.environ.get('BUCKET_NAME'),
+    #                     Key=name,
+    #                     Tagging={
+    #                         'TagSet': [
+    #                             {
+    #                                 'Key': key,
+    #                                 'Value': value
+    #                             },
+    #                         ]
+    #                     }
+    #                 )  
     for name in not_modified:
-        s3.put_object_tagging(
-                        Bucket=os.environ.get('BUCKET_NAME'),
-                        Key=name,
-                        Tagging={
-                            'TagSet': [
-                                {
-                                    'Key': key,
-                                    'Value': value
-                                },
-                            ]
-                        }
-                    )  
+        try:
+            # Attempt to tag the object
+            response = s3.put_object_tagging(
+                Bucket=os.environ.get('BUCKET_NAME'),
+                Key=name,
+                Tagging={
+                    'TagSet': [
+                        {
+                            'Key': key,
+                            'Value': value
+                        },
+                    ]
+                }
+            )
+            print(f"Tagging successful for {name}: {response}")
+        except Exception as e:
+            # If there's an error, print it out.
+            print(f"Error tagging {name}: {e}")

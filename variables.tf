@@ -19,13 +19,13 @@ variable "source_bucket" {
 variable "modify_days" {
   description = "Arbitrary value for condition regarding modifying the object"
   type        = string
-  default     = "30"
+  default     = "0.00278"
 }
 
 variable "access_days" {
   description = "Arbitrary value for condition regarding accessing the object"
   type        = string
-  default     = "30"
+  default     = "0.00278"
 }
 
 variable "lambda_function_name" {
@@ -75,7 +75,7 @@ variable "target_prefix" {
 variable "log_bucket_name" {
     description = "Name of the bucket for server access logs"
     type        = string
-    default     = "bucket-optimize-logs"
+    default     = "bucket-optimize-logs-test"
 }
 
 variable "log_bucket_acl" {

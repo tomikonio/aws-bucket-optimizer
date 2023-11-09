@@ -12,6 +12,7 @@ module "lambda_function" {
       effect    = "Allow",
       actions   = ["s3:PutObjectTagging",
                    "s3:ListBucket",
+                   "s3:GetObjectTagging",
                    "s3:GetBucketLocation"]
       resources = [local.arn_source_bucket_wildcard, 
                    local.arn_source_bucket,
