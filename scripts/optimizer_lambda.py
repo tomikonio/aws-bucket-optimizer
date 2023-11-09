@@ -27,14 +27,14 @@ key = os.environ.get('KEY')
 value = os.environ.get('VALUE')
 athena = boto3.client('athena')
 s3 = boto3.client('s3')
-current_time_seconds = datetime.now().timestamp()
+
 
 def lambda_handler(event, context):
     
     ######## PART FOR MODIFIED TIME ########
 
     # Get the list of objects in the source bucket
-    response = s3.list_objects(Bucket=os.environ.get('BUCKET_NAME'))
+    response = s3.list_objects(Bucket=os.environ.get('BUCKET_NAME')) #/get objects without tags.... to check
     print(f'{response=}')
     # Compute how many days passed off from the last modification and if objects don't meet requirements, then add them to the list
    
@@ -53,6 +53,7 @@ def lambda_handler(event, context):
 
 
     for obj in response.get('Contents', []):
+        current_time_seconds = datetime.now().timestamp()
         tagging_response = s3.get_object_tagging(Bucket=os.environ.get('BUCKET_NAME'), Key=obj['Key'])
         tags = {tag['Key']: tag['Value'] for tag in tagging_response.get('TagSet', [])}
            
