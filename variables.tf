@@ -13,7 +13,7 @@ variable "aws_account_id" {
 variable "source_bucket" {
   description = "Name of the Amazon S3 Source Bucket"
   type        = string
-  default     = "gilad-optimizer-test-files-bucket"
+  default     = "raziel-optimizier-test-files-bucket"
 }
 
 variable "modify_days" {
