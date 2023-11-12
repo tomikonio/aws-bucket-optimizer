@@ -34,46 +34,47 @@ def lambda_handler(event, context):
     ######## PART FOR MODIFIED TIME ########
 
     # Get the list of objects in the source bucket
-    response = s3.list_objects(Bucket=os.environ.get('BUCKET_NAME')) #/get objects without tags.... to check
+    response = s3.list_objects(Bucket=os.environ.get('BUCKET_NAME')) 
     print(f'{response=}')
     # Compute how many days passed off from the last modification and if objects don't meet requirements, then add them to the list
    
     # not_modified = [obj['Key'] for obj in response['Contents'] if (current_time_seconds - obj['LastModified'].timestamp()) / 86400 >= float(os.environ.get('MODIFY_DAYS'))]
     
-    
+    paginator = s3.get_paginator('list_objects_v2')
+
     not_modified = []
-    # for obj in response['Contents']:
-    #     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    #     if (current_time_seconds - obj['LastModified'].timestamp()) / 86400 >= float(os.environ.get('MODIFY_DAYS')):
-    #         print(f'{current_time} - {obj["Key"]=} --- appended')
-    #         not_modified.append(obj['Key'])
-    #     else: 
-    #         print(f'{current_time} - {obj["Key"]=} --- not appended')
 
+    for page in paginator.paginate(Bucket=os.environ.get('BUCKET_NAME')):
+        for obj in page.get('Contents', []):
+            current_time_seconds = datetime.now().timestamp()
+            last_modified_time = obj['LastModified'].timestamp()
+            time_difference = (current_time_seconds - last_modified_time) / 86400
 
+            if time_difference >= float(os.environ.get('MODIFY_DAYS')):
+                not_modified.append(obj['Key'])
 
-    for obj in response.get('Contents', []):
-        current_time_seconds = datetime.now().timestamp()
-        tagging_response = s3.get_object_tagging(Bucket=os.environ.get('BUCKET_NAME'), Key=obj['Key'])
-        tags = {tag['Key']: tag['Value'] for tag in tagging_response.get('TagSet', [])}
+    # for obj in response.get('Contents', []):
+    #     current_time_seconds = datetime.now().timestamp()
+    #     # tagging_response = s3.get_object_tagging(Bucket=os.environ.get('BUCKET_NAME'), Key=obj['Key'])
+    #     # tags = {tag['Key']: tag['Value'] for tag in tagging_response.get('TagSet', [])}
            
-        # Check if the object is already tagged with the specified key-value pair
-        if key in tags and tags[key] == value:
-            print(f"{obj['Key']} is already tagged with {key}={value}. Skipping.")
-            continue
-        last_modified_time = obj['LastModified'].timestamp()
-        time_difference = (current_time_seconds - last_modified_time) / 86400
+    #     # # Check if the object is already tagged with the specified key-value pair
+    #     # if key in tags and tags[key] == value:
+    #     #     print(f"{obj['Key']} is already tagged with {key}={value}. Skipping.")
+    #     #     continue
+    #     last_modified_time = obj['LastModified'].timestamp()
+    #     time_difference = (current_time_seconds - last_modified_time) / 86400
 
-        # Print the current time, last modified time, and time difference
-        print(f"{current_time_seconds=}")
-        print(f"{last_modified_time=}")
-        print(f"Time difference in days: {time_difference * 1440}")
+    #     # Print the current time, last modified time, and time difference
+    #     print(f"{current_time_seconds=}")
+    #     print(f"{last_modified_time=}")
+    #     print(f"Time difference in days: {time_difference * 1440}")
 
-        if  time_difference >= float(os.environ.get('MODIFY_DAYS')):
-            print(f"{obj['Key']} has not been modified in the last {os.environ.get('MODIFY_DAYS')} days. Appending for tagging.")
-            not_modified.append(obj['Key'])
-        else:
-            print(f"{obj['Key']} was modified recently. Not appending.")
+    #     if  time_difference >= float(os.environ.get('MODIFY_DAYS')):
+    #         print(f"{obj['Key']} has not been modified in the last {os.environ.get('MODIFY_DAYS')} days. Appending for tagging.")
+    #         not_modified.append(obj['Key'])
+    #     else:
+    #         print(f"{obj['Key']} was modified recently. Not appending.")
 
 
     #########################################
@@ -170,3 +171,4 @@ parse_datetime('{current_datetime}','yyyy-MM-dd:HH:mm:ss')'''
         except Exception as e:
             # If there's an error, print it out.
             print(f"Error tagging {name}: {e}")
+        
