@@ -46,12 +46,24 @@ def lambda_handler(event, context):
 
     for page in paginator.paginate(Bucket=os.environ.get('BUCKET_NAME')):
         for obj in page.get('Contents', []):
+            # Get the current time and the object's last modified time
             current_time_seconds = datetime.now().timestamp()
             last_modified_time = obj['LastModified'].timestamp()
             time_difference = (current_time_seconds - last_modified_time) / 86400
 
+            # Fetch the tags for each object
+            tagging_response = s3.get_object_tagging(Bucket=os.environ.get('BUCKET_NAME'), Key=obj['Key'])
+            tags = {tag['Key']: tag['Value'] for tag in tagging_response.get('TagSet', [])}
+
+            # Check if the object is already tagged with the specified key-value pair
+            if key in tags and tags[key] == value:
+                print(f"{obj['Key']} is already tagged with {key}={value}. Skipping.")
+                continue
+
+            # If the object isn't tagged with the key-value pair and meets the time condition, add to the list
             if time_difference >= float(os.environ.get('MODIFY_DAYS')):
                 not_modified.append(obj['Key'])
+
 
     # for obj in response.get('Contents', []):
     #     current_time_seconds = datetime.now().timestamp()
