@@ -33,62 +33,28 @@ def lambda_handler(event, context):
     
     ######## PART FOR MODIFIED TIME ########
 
-    # Get the list of objects in the source bucket
-    response = s3.list_objects(Bucket=os.environ.get('BUCKET_NAME')) 
-    print(f'{response=}')
-    # Compute how many days passed off from the last modification and if objects don't meet requirements, then add them to the list
-   
-    # not_modified = [obj['Key'] for obj in response['Contents'] if (current_time_seconds - obj['LastModified'].timestamp()) / 86400 >= float(os.environ.get('MODIFY_DAYS'))]
-    
     paginator = s3.get_paginator('list_objects_v2')
 
     not_modified = []
 
-    for page in paginator.paginate(Bucket=os.environ.get('BUCKET_NAME')):
-        for obj in page.get('Contents', []):
-            # Get the current time and the object's last modified time
-            current_time_seconds = datetime.now().timestamp()
-            last_modified_time = obj['LastModified'].timestamp()
-            time_difference = (current_time_seconds - last_modified_time) / 86400
+    # for page in paginator.paginate(Bucket=os.environ.get('BUCKET_NAME')):
+    #     for obj in page.get('Contents', []):
+    #         current_time_seconds = datetime.now().timestamp()
+    #         last_modified_time = obj['LastModified'].timestamp()
+    #         time_difference = (current_time_seconds - last_modified_time) / 86400
 
-            # Fetch the tags for each object
-            tagging_response = s3.get_object_tagging(Bucket=os.environ.get('BUCKET_NAME'), Key=obj['Key'])
-            tags = {tag['Key']: tag['Value'] for tag in tagging_response.get('TagSet', [])}
+    #         if time_difference >= float(os.environ.get('MODIFY_DAYS')):
+    #             not_modified.append(obj['Key'])
 
-            # Check if the object is already tagged with the specified key-value pair
-            if key in tags and tags[key] == value:
-                print(f"{obj['Key']} is already tagged with {key}={value}. Skipping.")
-                continue
+    current_time_seconds = datetime.now().timestamp()
+    filtered_iterator = paginator.paginate(Bucket=os.environ.get('BUCKET_NAME'), MaxKeys=100).search("Contents[?StorageClass != 'STANDARD_IA'][]") #filter the storage class from the start.
+    for obj in filtered_iterator:
+        print(f"Processing object: {obj['Key']} with StorageClass: {obj.get('StorageClass', 'N/A')}")
+        last_modified_time = obj['LastModified'].timestamp()
+        time_difference = (current_time_seconds - last_modified_time) / 86400
 
-            # If the object isn't tagged with the key-value pair and meets the time condition, add to the list
-            if time_difference >= float(os.environ.get('MODIFY_DAYS')):
-                not_modified.append(obj['Key'])
-
-
-    # for obj in response.get('Contents', []):
-    #     current_time_seconds = datetime.now().timestamp()
-    #     # tagging_response = s3.get_object_tagging(Bucket=os.environ.get('BUCKET_NAME'), Key=obj['Key'])
-    #     # tags = {tag['Key']: tag['Value'] for tag in tagging_response.get('TagSet', [])}
-           
-    #     # # Check if the object is already tagged with the specified key-value pair
-    #     # if key in tags and tags[key] == value:
-    #     #     print(f"{obj['Key']} is already tagged with {key}={value}. Skipping.")
-    #     #     continue
-    #     last_modified_time = obj['LastModified'].timestamp()
-    #     time_difference = (current_time_seconds - last_modified_time) / 86400
-
-    #     # Print the current time, last modified time, and time difference
-    #     print(f"{current_time_seconds=}")
-    #     print(f"{last_modified_time=}")
-    #     print(f"Time difference in days: {time_difference * 1440}")
-
-    #     if  time_difference >= float(os.environ.get('MODIFY_DAYS')):
-    #         print(f"{obj['Key']} has not been modified in the last {os.environ.get('MODIFY_DAYS')} days. Appending for tagging.")
-    #         not_modified.append(obj['Key'])
-    #     else:
-    #         print(f"{obj['Key']} was modified recently. Not appending.")
-
-
+        if time_difference >= float(os.environ.get('MODIFY_DAYS')):
+            not_modified.append(obj['Key'])
     #########################################
 
 
