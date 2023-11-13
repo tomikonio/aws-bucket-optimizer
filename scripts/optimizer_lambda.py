@@ -49,6 +49,13 @@ def lambda_handler(event, context):
     current_time_seconds = datetime.now().timestamp()
     filtered_iterator = paginator.paginate(Bucket=os.environ.get('BUCKET_NAME'), MaxKeys=100).search("Contents[?StorageClass != 'STANDARD_IA'][]") #filter the storage class from the start.
     for obj in filtered_iterator:
+
+        tagging = s3.get_object_tagging(Bucket=os.environ.get('BUCKET_NAME'), Key=obj['Key'])
+        tags = {tag['Key']: tag['Value'] for tag in tagging.get('TagSet', [])}
+        # Check if object is tagged with demo=demo
+        if tags.get('demo') == 'demo':
+            continue  # Skip this file as it's already tagged with demo=demo
+        
         print(f"Processing object: {obj['Key']} with StorageClass: {obj.get('StorageClass', 'N/A')}")
         last_modified_time = obj['LastModified'].timestamp()
         time_difference = (current_time_seconds - last_modified_time) / 86400
