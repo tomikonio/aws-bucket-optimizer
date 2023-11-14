@@ -4,7 +4,7 @@ module "lambda_function" {
   description           = "Develeap bucket optimizer lambda"
   handler               = "optimizer_lambda.lambda_handler" 
   runtime               = "python3.8"
-  timeout = 30
+  timeout = 60
   cloudwatch_logs_retention_in_days = 30
   attach_policy_statements = true
   policy_statements = {
